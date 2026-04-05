@@ -1,8 +1,6 @@
-#include <engine/core/Engine.hpp>
+#include <memory>
+#include <MyApp.hpp>
 
-/**
- * Start here...
- */
 int main(int argc, char **argv) {
-    return 0;
+    return std::make_unique<MyApp>()->run(argc, argv);
 }
