@@ -26,6 +26,7 @@
 [ ] Bloom with the use of HDR
 
 ### Group B:
+
 [ ] Deferred Shading  
 [ ] Point Shadows  
 [ ] SSAO
