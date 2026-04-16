@@ -4,6 +4,10 @@
       "floor": {
         "path": "floor/floor.obj",
         "flip_uvs": false
+      },
+      "chair": {
+        "path": "chair/chair.obj",
+        "flip_uvs": false
       }
     }
   },

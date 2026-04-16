@@ -23,6 +23,8 @@ private:
 
     void draw_floor();
 
+    void draw_chair();
+
     void update_camera();
 
     bool m_first_mouse{true};

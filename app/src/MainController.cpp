@@ -1,7 +1,5 @@
 #include <MainController.hpp>
 #include <engine/graphics/GraphicsController.hpp>
-#include <spdlog/spdlog.h>
-#include <iostream>
 
 void MainController::initialize() {
     engine::graphics::OpenGL::enable_depth_testing();
@@ -28,7 +26,7 @@ bool MainController::loop() {
 
 void MainController::draw_floor() {
     auto graphics = engine::core::Controller::get<engine::graphics::GraphicsController>();
-    auto shader   = engine::core::Controller::get<engine::resources::ResourcesController>()->shader("floor");
+    auto shader   = engine::core::Controller::get<engine::resources::ResourcesController>()->shader("basic");
     auto floor    = engine::core::Controller::get<engine::resources::ResourcesController>()->model("floor");
     shader->use();
 
@@ -54,10 +52,37 @@ void MainController::begin_draw() {
 
 void MainController::draw() {
     draw_floor();
+    draw_chair();
 }
 
 void MainController::end_draw() {
     engine::core::Controller::get<engine::platform::PlatformController>()->swap_buffers();
+}
+
+void MainController::draw_chair() {
+    auto graphics = engine::core::Controller::get<engine::graphics::GraphicsController>();
+    auto shader   = engine::core::Controller::get<engine::resources::ResourcesController>()->shader("basic");
+    auto chair    = engine::core::Controller::get<engine::resources::ResourcesController>()->model("chair");
+    shader->use();
+    auto camera = engine::core::Controller::get<engine::graphics::GraphicsController>()->camera();
+
+    // dodao sam svoju projection matrix jer mi zoom ne radi sa graphics->projection_matrix()
+    glm::mat4 projection = glm::perspective(
+        glm::radians(camera->Zoom),
+        1280.0f / 720.0f,
+        0.1f,
+        100.0f
+    );
+
+    shader->set_mat4("projection", projection);
+    shader->set_mat4("view", graphics->camera()->view_matrix());
+
+    glm::mat4 model = glm::mat4(1.0f);
+    model           = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
+    model           = glm::scale(model, glm::vec3(1.0f));
+    shader->set_mat4("model", model);
+
+    chair->draw(shader);
 }
 
 void MainController::update() {
