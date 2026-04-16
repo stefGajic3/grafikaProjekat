@@ -10,7 +10,7 @@ void MainController::initialize() {
 
     platform->set_enable_cursor(false);
 
-    camera->Position = glm::vec3(0.0f, 1.5f, 7.0f);
+    camera->Position = glm::vec3(0.0f, 1.5f, 5.0f);
     camera->Yaw      = -90.0f;
     camera->Pitch    = -10.0f;
     camera->rotate_camera(0.0f, 0.0f);
@@ -26,11 +26,13 @@ bool MainController::loop() {
 
 void MainController::draw_floor() {
     auto graphics = engine::core::Controller::get<engine::graphics::GraphicsController>();
-    auto shader   = engine::core::Controller::get<engine::resources::ResourcesController>()->shader("basic");
+    auto shader   = engine::core::Controller::get<engine::resources::ResourcesController>()->shader("lighting");
     auto floor    = engine::core::Controller::get<engine::resources::ResourcesController>()->model("floor");
     shader->use();
+    shader->set_vec3("lightPos", glm::vec3(1.5f, 2.5f, 2.0f));
 
     auto camera = engine::core::Controller::get<engine::graphics::GraphicsController>()->camera();
+    shader->set_vec3("viewPos", camera->Position);
 
     // dodao sam svoju projection matrix jer mi zoom ne radi sa graphics->projection_matrix()
     glm::mat4 projection = glm::perspective(
@@ -61,10 +63,14 @@ void MainController::end_draw() {
 
 void MainController::draw_chair() {
     auto graphics = engine::core::Controller::get<engine::graphics::GraphicsController>();
-    auto shader   = engine::core::Controller::get<engine::resources::ResourcesController>()->shader("basic");
+    auto shader   = engine::core::Controller::get<engine::resources::ResourcesController>()->shader("lighting");
     auto chair    = engine::core::Controller::get<engine::resources::ResourcesController>()->model("chair");
     shader->use();
+
+    shader->set_vec3("lightPos", glm::vec3(1.5f, 2.5f, 2.0f));
     auto camera = engine::core::Controller::get<engine::graphics::GraphicsController>()->camera();
+
+    shader->set_vec3("viewPos", camera->Position);
 
     // dodao sam svoju projection matrix jer mi zoom ne radi sa graphics->projection_matrix()
     glm::mat4 projection = glm::perspective(
