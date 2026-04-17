@@ -55,6 +55,8 @@ void MainController::begin_draw() {
 void MainController::draw() {
     draw_floor();
     draw_chair();
+    draw_lamp();
+    draw_light_bulb();
 }
 
 void MainController::end_draw() {
@@ -89,6 +91,68 @@ void MainController::draw_chair() {
     shader->set_mat4("model", model);
 
     chair->draw(shader);
+}
+
+void MainController::draw_lamp() {
+    auto graphics = engine::core::Controller::get<engine::graphics::GraphicsController>();
+    auto shader   = engine::core::Controller::get<engine::resources::ResourcesController>()->shader("lighting");
+    auto lamp     = engine::core::Controller::get<engine::resources::ResourcesController>()->model("lamp");
+    shader->use();
+
+    shader->set_vec3("lightPos", glm::vec3(1.5f, 2.5f, 2.0f));
+    auto camera = engine::core::Controller::get<engine::graphics::GraphicsController>()->camera();
+
+    shader->set_vec3("viewPos", camera->Position);
+
+    // dodao sam svoju projection matrix jer mi zoom ne radi sa graphics->projection_matrix()
+    glm::mat4 projection = glm::perspective(
+        glm::radians(camera->Zoom),
+        1280.0f / 720.0f,
+        0.1f,
+        100.0f
+    );
+
+    shader->set_mat4("projection", projection);
+    shader->set_mat4("view", graphics->camera()->view_matrix());
+
+    glm::mat4 model = glm::mat4(1.0f);
+    model           = glm::translate(model, glm::vec3(1.5f, 0.0f, 1.0f));;
+    model           = glm::scale(model, glm::vec3(0.2f));
+    shader->set_mat4("model", model);
+
+    lamp->draw(shader);
+}
+
+void MainController::draw_light_bulb() {
+    auto graphics  = engine::core::Controller::get<engine::graphics::GraphicsController>();
+    auto resources = engine::core::Controller::get<engine::resources::ResourcesController>();
+
+    auto shader = resources->shader("bulb");
+    auto bulb   = resources->model("bulb");
+    auto camera = graphics->camera();
+
+    shader->use();
+
+    glm::mat4 projection = glm::perspective(
+        glm::radians(camera->Zoom),
+        1280.0f / 720.0f,
+        0.1f,
+        100.0f
+    );
+
+    shader->set_mat4("projection", projection);
+    shader->set_mat4("view", camera->view_matrix());
+    shader->set_vec3("bulbColor", glm::vec3(1.0f, 0.85f, 0.55f));
+
+    glm::mat4 model(1.0f);
+    model = glm::translate(model, glm::vec3(1.5f, 0.0f, 1.0f));
+    model = glm::scale(model, glm::vec3(0.2f));
+    model = glm::translate(model, glm::vec3(0.0f, 8.8f, 0.0f));
+    model = glm::scale(model, glm::vec3(0.6f));
+
+    shader->set_mat4("model", model);
+
+    bulb->draw(shader);
 }
 
 void MainController::update() {

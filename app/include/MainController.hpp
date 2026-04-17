@@ -25,6 +25,10 @@ private:
 
     void draw_chair();
 
+    void draw_lamp();
+
+    void draw_light_bulb();
+
     void update_camera();
 
     bool m_first_mouse{true};

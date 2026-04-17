@@ -8,6 +8,14 @@
       "chair": {
         "path": "chair/chair.obj",
         "flip_uvs": false
+      },
+      "lamp": {
+        "path": "lamp/lamp.obj",
+        "flip_uvs": false
+      },
+      "bulb": {
+        "path": "cube/cube.obj",
+        "flip_uvs": false
       }
     }
   },
