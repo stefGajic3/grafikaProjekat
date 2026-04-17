@@ -29,10 +29,17 @@ void MainController::draw_floor() {
     auto shader   = engine::core::Controller::get<engine::resources::ResourcesController>()->shader("lighting");
     auto floor    = engine::core::Controller::get<engine::resources::ResourcesController>()->model("floor");
     shader->use();
-    shader->set_vec3("lightPos", glm::vec3(1.5f, 2.5f, 2.0f));
 
     auto camera = engine::core::Controller::get<engine::graphics::GraphicsController>()->camera();
     shader->set_vec3("viewPos", camera->Position);
+
+    // izracunao sam da se koord light bulba nalaze na (1.5, 1.76, 1.0)
+    // a to su koordinate za point light
+    shader->set_vec3("lightPos", glm::vec3(1.5f, 1.76f, 1.0f));
+    shader->set_vec3("lightColor", glm::vec3(1.0f, 0.75f, 0.4f));
+
+    shader->set_vec3("dirLightDir", glm::vec3(-0.2f, -1.0f, -0.3f));
+    shader->set_vec3("dirLightColor", glm::vec3(0.15f, 0.15f, 0.2f));
 
     // dodao sam svoju projection matrix jer mi zoom ne radi sa graphics->projection_matrix()
     glm::mat4 projection = glm::perspective(
@@ -69,10 +76,16 @@ void MainController::draw_chair() {
     auto chair    = engine::core::Controller::get<engine::resources::ResourcesController>()->model("chair");
     shader->use();
 
-    shader->set_vec3("lightPos", glm::vec3(1.5f, 2.5f, 2.0f));
     auto camera = engine::core::Controller::get<engine::graphics::GraphicsController>()->camera();
 
     shader->set_vec3("viewPos", camera->Position);
+
+    // izracunao sam da se koord light bulba nalaze na (1.5, 1.76, 1.0)
+    shader->set_vec3("lightPos", glm::vec3(1.5f, 1.76f, 1.0f));
+    shader->set_vec3("lightColor", glm::vec3(1.0f, 0.75f, 0.4f));
+
+    shader->set_vec3("dirLightDir", glm::vec3(-0.2f, -1.0f, -0.3f));
+    shader->set_vec3("dirLightColor", glm::vec3(0.15f, 0.15f, 0.2f));
 
     // dodao sam svoju projection matrix jer mi zoom ne radi sa graphics->projection_matrix()
     glm::mat4 projection = glm::perspective(
@@ -98,11 +111,16 @@ void MainController::draw_lamp() {
     auto shader   = engine::core::Controller::get<engine::resources::ResourcesController>()->shader("lighting");
     auto lamp     = engine::core::Controller::get<engine::resources::ResourcesController>()->model("lamp");
     shader->use();
-
-    shader->set_vec3("lightPos", glm::vec3(1.5f, 2.5f, 2.0f));
     auto camera = engine::core::Controller::get<engine::graphics::GraphicsController>()->camera();
 
     shader->set_vec3("viewPos", camera->Position);
+
+    // izracunao sam da se koord light bulba nalaze na (1.5, 1.76, 1.0)
+    shader->set_vec3("lightPos", glm::vec3(1.5f, 1.76f, 1.0f));
+    shader->set_vec3("lightColor", glm::vec3(1.0f, 0.75f, 0.4f));
+
+    shader->set_vec3("dirLightDir", glm::vec3(-0.2f, -1.0f, -0.3f));
+    shader->set_vec3("dirLightColor", glm::vec3(0.15f, 0.15f, 0.2f));
 
     // dodao sam svoju projection matrix jer mi zoom ne radi sa graphics->projection_matrix()
     glm::mat4 projection = glm::perspective(
@@ -165,16 +183,16 @@ void MainController::update_camera() {
     float dt      = platform->dt();
 
     if (platform->key(engine::platform::KEY_W).state() == engine::platform::Key::State::Pressed) {
-        camera->move_camera(engine::graphics::Camera::Movement::FORWARD, dt * 1.5);
+        camera->move_camera(engine::graphics::Camera::Movement::FORWARD, dt);
     }
     if (platform->key(engine::platform::KEY_S).state() == engine::platform::Key::State::Pressed) {
-        camera->move_camera(engine::graphics::Camera::Movement::BACKWARD, dt * 1.5);
+        camera->move_camera(engine::graphics::Camera::Movement::BACKWARD, dt);
     }
     if (platform->key(engine::platform::KEY_A).state() == engine::platform::Key::State::Pressed) {
-        camera->move_camera(engine::graphics::Camera::Movement::LEFT, dt * 1.5);
+        camera->move_camera(engine::graphics::Camera::Movement::LEFT, dt);
     }
     if (platform->key(engine::platform::KEY_D).state() == engine::platform::Key::State::Pressed) {
-        camera->move_camera(engine::graphics::Camera::Movement::RIGHT, dt * 1.5);
+        camera->move_camera(engine::graphics::Camera::Movement::RIGHT, dt);
     }
     auto mouse = platform->mouse();
     if (m_first_mouse) {
