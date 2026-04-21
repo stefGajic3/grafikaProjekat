@@ -1,5 +1,7 @@
 #include <MainController.hpp>
 #include <engine/graphics/GraphicsController.hpp>
+#include <GLFW/glfw3.h>
+#include <cmath>
 
 void MainController::initialize() {
     engine::graphics::OpenGL::enable_depth_testing();
@@ -18,9 +20,21 @@ void MainController::initialize() {
 
 bool MainController::loop() {
     const auto platform = engine::core::Controller::get<engine::platform::PlatformController>();
-    if (platform->key(engine::platform::KeyId::KEY_ESCAPE).state() == engine::platform::Key::State::JustPressed) {
+
+    if (platform->key(engine::platform::KeyId::KEY_ESCAPE).state() ==
+        engine::platform::Key::State::JustPressed) {
         return false;
     }
+
+    float current_time = static_cast<float>(glfwGetTime());
+
+    if (platform->key(engine::platform::KeyId::KEY_SPACE).state() ==
+        engine::platform::Key::State::JustPressed) {
+        trigger_lamp_event(current_time);
+    }
+
+    update_lamp_event(current_time);
+
     return true;
 }
 
@@ -36,10 +50,13 @@ void MainController::draw_floor() {
     // izracunao sam da se koord light bulba nalaze na (1.5, 1.76, 1.0)
     // a to su koordinate za point light
     shader->set_vec3("lightPos", glm::vec3(1.5f, 1.76f, 1.0f));
-    shader->set_vec3("lightColor", glm::vec3(1.0f, 0.75f, 0.4f));
+    shader->set_vec3("lightColor", point_light_color_ * point_light_intensity_);
 
     shader->set_vec3("dirLightDir", glm::vec3(-0.2f, -1.0f, -0.3f));
     shader->set_vec3("dirLightColor", glm::vec3(0.15f, 0.15f, 0.2f));
+
+    shader->set_float("materialShininess", 10.0f);
+    shader->set_float("materialSpecularStrength", 0.12f);
 
     // dodao sam svoju projection matrix jer mi zoom ne radi sa graphics->projection_matrix()
     glm::mat4 projection = glm::perspective(
@@ -82,10 +99,13 @@ void MainController::draw_chair() {
 
     // izracunao sam da se koord light bulba nalaze na (1.5, 1.76, 1.0)
     shader->set_vec3("lightPos", glm::vec3(1.5f, 1.76f, 1.0f));
-    shader->set_vec3("lightColor", glm::vec3(1.0f, 0.75f, 0.4f));
+    shader->set_vec3("lightColor", point_light_color_ * point_light_intensity_);
 
     shader->set_vec3("dirLightDir", glm::vec3(-0.2f, -1.0f, -0.3f));
     shader->set_vec3("dirLightColor", glm::vec3(0.15f, 0.15f, 0.2f));
+
+    shader->set_float("materialShininess", 20.0f);
+    shader->set_float("materialSpecularStrength", 0.22f);
 
     // dodao sam svoju projection matrix jer mi zoom ne radi sa graphics->projection_matrix()
     glm::mat4 projection = glm::perspective(
@@ -117,10 +137,13 @@ void MainController::draw_lamp() {
 
     // izracunao sam da se koord light bulba nalaze na (1.5, 1.76, 1.0)
     shader->set_vec3("lightPos", glm::vec3(1.5f, 1.76f, 1.0f));
-    shader->set_vec3("lightColor", glm::vec3(1.0f, 0.75f, 0.4f));
+    shader->set_vec3("lightColor", point_light_color_ * point_light_intensity_);
 
     shader->set_vec3("dirLightDir", glm::vec3(-0.2f, -1.0f, -0.3f));
     shader->set_vec3("dirLightColor", glm::vec3(0.15f, 0.15f, 0.2f));
+
+    shader->set_float("materialShininess", 32.0f);
+    shader->set_float("materialSpecularStrength", 0.35f);
 
     // dodao sam svoju projection matrix jer mi zoom ne radi sa graphics->projection_matrix()
     glm::mat4 projection = glm::perspective(
@@ -160,7 +183,7 @@ void MainController::draw_light_bulb() {
 
     shader->set_mat4("projection", projection);
     shader->set_mat4("view", camera->view_matrix());
-    shader->set_vec3("bulbColor", glm::vec3(1.0f, 0.85f, 0.55f));
+    shader->set_vec3("bulbColor", point_light_color_ * point_light_intensity_);
 
     glm::mat4 model(1.0f);
     model = glm::translate(model, glm::vec3(1.5f, 0.0f, 1.0f));
@@ -200,5 +223,61 @@ void MainController::update_camera() {
     } else {
         camera->rotate_camera(mouse.dx, mouse.dy);
         camera->zoom(mouse.scroll);
+    }
+}
+
+void MainController::trigger_lamp_event(float current_time) {
+    lamp_event_state_      = LampEventState::WaitBeforeFlicker;
+    lamp_event_start_time_ = current_time;
+
+    point_light_color_     = glm::vec3(1.0f, 0.75f, 0.4f);
+    point_light_intensity_ = 1.0f;
+}
+
+void MainController::update_lamp_event(float current_time) {
+    switch (lamp_event_state_) {
+    case LampEventState::Idle: point_light_color_ = glm::vec3(1.0f, 0.75f, 0.4f);
+        point_light_intensity_ = 1.0f;
+        break;
+
+    case LampEventState::WaitBeforeFlicker: point_light_color_ = glm::vec3(1.0f, 0.75f, 0.4f);
+        point_light_intensity_ = 1.0f;
+
+        if (current_time - lamp_event_start_time_ >= 2.0f) {
+            lamp_event_state_   = LampEventState::Flicker;
+            flicker_start_time_ = current_time;
+        }
+        break;
+
+    case LampEventState::Flicker: {
+        float elapsed = current_time - flicker_start_time_;
+        float t       = current_time;
+
+        point_light_color_ = glm::vec3(1.0f, 0.75f, 0.4f);
+
+        float flicker =
+                0.2f * std::sin(t * 25.0f) +
+                0.15f * std::sin(t * 40.0f) +
+                0.10f * std::sin(t * 70.0f);
+
+        if (std::sin(t * 10.0f) > 0.97f) {
+            point_light_intensity_ = 0.2f;
+        } else {
+            point_light_intensity_ = 0.8f + flicker;
+        }
+
+        point_light_intensity_ = glm::clamp(point_light_intensity_, 0.1f, 1.2f);
+
+        if (elapsed >= 2.0f) {
+            lamp_event_state_      = LampEventState::RedLight;
+            point_light_color_     = glm::vec3(1.0f, 0.1f, 0.05f);
+            point_light_intensity_ = 1.0f;
+        }
+        break;
+    }
+
+    case LampEventState::RedLight: point_light_color_ = glm::vec3(1.0f, 0.1f, 0.05f);
+        point_light_intensity_ = 1.0f;
+        break;
     }
 }

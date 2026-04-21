@@ -32,6 +32,25 @@ private:
     void update_camera();
 
     bool m_first_mouse{true};
+
+    void trigger_lamp_event(float current_time);
+
+    void update_lamp_event(float current_time);
+
+    enum class LampEventState {
+        Idle,
+        WaitBeforeFlicker,
+        Flicker,
+        RedLight
+    };
+
+    LampEventState lamp_event_state_ = LampEventState::Idle;
+
+    float lamp_event_start_time_ = 0.0f;
+    float flicker_start_time_    = 0.0f;
+
+    glm::vec3 point_light_color_ = glm::vec3(1.0f, 0.75f, 0.4f);
+    float point_light_intensity_ = 1.0f;
 };
 
 #endif
