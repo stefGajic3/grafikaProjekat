@@ -31,11 +31,23 @@ private:
 
     void update_camera();
 
-    bool m_first_mouse{true};
-
     void trigger_lamp_event(float current_time);
 
     void update_lamp_event(float current_time);
+
+    float get_lamp_sway_angle(float current_time) const;
+
+    glm::mat4 get_lamp_model_matrix(float current_time) const;
+
+    glm::vec3 get_point_light_position(float current_time) const;
+
+    bool m_first_mouse{true};
+
+    bool directional_light_enabled_ = true;
+
+    bool point_light_enabled_ = true;
+
+    bool lamp_sway_enabled_ = false;
 
     enum class LampEventState {
         Idle,
@@ -51,6 +63,8 @@ private:
 
     glm::vec3 point_light_color_ = glm::vec3(1.0f, 0.75f, 0.4f);
     float point_light_intensity_ = 1.0f;
+
+    glm::vec3 default_point_light_color_ = glm::vec3(1.0f, 0.75f, 0.4f);
 };
 
 #endif
