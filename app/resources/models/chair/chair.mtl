@@ -4,3 +4,4 @@ Kd 1.000 1.000 1.000
 Ks 0.200 0.200 0.200
 Ns 16.000
 map_Kd chair_01_Base_Color.png
+map_Ns chair_01_Roughness.png

@@ -29,6 +29,10 @@ private:
 
     void draw_light_bulb();
 
+    void draw_barrel1();
+
+    void draw_barrel2();
+
     void update_camera();
 
     void trigger_lamp_event(float current_time);

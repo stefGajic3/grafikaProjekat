@@ -1,0 +1,10 @@
+newmtl WoodenBarrel
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd 4k_WoodenBarrel_BaseColor.jpg
+map_Ns 4k_WoodenBarrel_Roughness.jpg
+

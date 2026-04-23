@@ -16,6 +16,14 @@
       "bulb": {
         "path": "cube/cube.obj",
         "flip_uvs": false
+      },
+      "barrel1": {
+        "path": "barrel1/WoodenBarrel1.obj",
+        "flip_uvs": false
+      },
+      "barrel2": {
+        "path": "barrel2/WoodenBarrel2.obj",
+        "flip_uvs": false
       }
     }
   },

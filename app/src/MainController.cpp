@@ -87,6 +87,14 @@ bool MainController::loop() {
     return true;
 }
 
+void MainController::update() {
+    update_camera();
+
+    float current_time = static_cast<float>(glfwGetTime());
+
+    update_lamp_event(current_time);
+}
+
 void MainController::draw_floor() {
     auto graphics = engine::core::Controller::get<engine::graphics::GraphicsController>();
     auto shader   = engine::core::Controller::get<engine::resources::ResourcesController>()->shader("lighting");
@@ -105,9 +113,9 @@ void MainController::draw_floor() {
     else
         shader->set_vec3("lightColor", glm::vec3(0.0f));
 
-    shader->set_vec3("dirLightDir", glm::vec3(-0.2f, -1.0f, -0.3f));
+    shader->set_vec3("dirLightDir", glm::vec3(-0.35f, -1.0f, 0.15f));
     if (directional_light_enabled_)
-        shader->set_vec3("dirLightColor", glm::vec3(0.1f, 0.1f, 0.2f));
+        shader->set_vec3("dirLightColor", glm::vec3(0.18f, 0.18f, 0.22f));
     else
         shader->set_vec3("dirLightColor", glm::vec3(0.0f));
 
@@ -137,6 +145,8 @@ void MainController::draw() {
     draw_chair();
     draw_lamp();
     draw_light_bulb();
+    draw_barrel1();
+    draw_barrel2();
 }
 
 void MainController::end_draw() {
@@ -145,11 +155,11 @@ void MainController::end_draw() {
 
 void MainController::draw_chair() {
     auto graphics = engine::core::Controller::get<engine::graphics::GraphicsController>();
-    auto shader   = engine::core::Controller::get<engine::resources::ResourcesController>()->shader("lighting");
+    auto shader   = engine::core::Controller::get<engine::resources::ResourcesController>()->shader("lighting1");
     auto chair    = engine::core::Controller::get<engine::resources::ResourcesController>()->model("chair");
     shader->use();
 
-    auto camera = engine::core::Controller::get<engine::graphics::GraphicsController>()->camera();
+    auto camera = graphics->camera();
 
     shader->set_vec3("viewPos", camera->Position);
 
@@ -163,13 +173,13 @@ void MainController::draw_chair() {
     else
         shader->set_vec3("lightColor", glm::vec3(0.0f));
 
-    shader->set_vec3("dirLightDir", glm::vec3(-0.2f, -1.0f, -0.3f));
+    shader->set_vec3("dirLightDir", glm::vec3(-0.35f, -1.0f, 0.15f));
     if (directional_light_enabled_)
-        shader->set_vec3("dirLightColor", glm::vec3(0.1f, 0.1f, 0.2f));
+        shader->set_vec3("dirLightColor", glm::vec3(0.18f, 0.18f, 0.22f));
     else
         shader->set_vec3("dirLightColor", glm::vec3(0.0f));
 
-    shader->set_float("materialShininess", 20.0f);
+    shader->set_float("materialShininess", 16.0f);
     shader->set_float("materialSpecularStrength", 0.22f);
 
     // dodao sam svoju projection matrix jer mi zoom ne radi sa graphics->projection_matrix()
@@ -184,8 +194,8 @@ void MainController::draw_chair() {
     shader->set_mat4("view", graphics->camera()->view_matrix());
 
     glm::mat4 model = glm::mat4(1.0f);
-    model           = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
-    model           = glm::scale(model, glm::vec3(1.0f));
+    model           = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.35f));
+    model           = glm::rotate(model, glm::radians(25.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     shader->set_mat4("model", model);
 
     chair->draw(shader);
@@ -196,8 +206,8 @@ void MainController::draw_lamp() {
     auto shader   = engine::core::Controller::get<engine::resources::ResourcesController>()->shader("lighting");
     auto lamp     = engine::core::Controller::get<engine::resources::ResourcesController>()->model("lamp");
     shader->use();
-    auto camera = engine::core::Controller::get<engine::graphics::GraphicsController>()->camera();
 
+    auto camera = graphics->camera();
     shader->set_vec3("viewPos", camera->Position);
 
     float current_time  = static_cast<float>(glfwGetTime());
@@ -210,9 +220,9 @@ void MainController::draw_lamp() {
     else
         shader->set_vec3("lightColor", glm::vec3(0.0f));
 
-    shader->set_vec3("dirLightDir", glm::vec3(-0.2f, -1.0f, -0.3f));
+    shader->set_vec3("dirLightDir", glm::vec3(-0.35f, -1.0f, 0.15f));
     if (directional_light_enabled_)
-        shader->set_vec3("dirLightColor", glm::vec3(0.1f, 0.1f, 0.2f));
+        shader->set_vec3("dirLightColor", glm::vec3(0.18f, 0.18f, 0.22f));
     else
         shader->set_vec3("dirLightColor", glm::vec3(0.0f));
 
@@ -231,7 +241,6 @@ void MainController::draw_lamp() {
     shader->set_mat4("view", graphics->camera()->view_matrix());
 
     glm::mat4 model = get_lamp_model_matrix(current_time);
-    shader->set_mat4("model", model);
     shader->set_mat4("model", model);
 
     lamp->draw(shader);
@@ -272,12 +281,98 @@ void MainController::draw_light_bulb() {
     bulb->draw(shader);
 }
 
-void MainController::update() {
-    update_camera();
-    
-    float current_time = static_cast<float>(glfwGetTime());
+void MainController::draw_barrel1() {
+    auto graphics = engine::core::Controller::get<engine::graphics::GraphicsController>();
+    auto shader   = engine::core::Controller::get<engine::resources::ResourcesController>()->shader("lighting1");
+    auto barrel   = engine::core::Controller::get<engine::resources::ResourcesController>()->model("barrel1");
+    shader->use();
 
-    update_lamp_event(current_time);
+    auto camera = graphics->camera();
+    shader->set_vec3("viewPos", camera->Position);
+
+    float current_time  = static_cast<float>(glfwGetTime());
+    glm::vec3 light_pos = get_point_light_position(current_time);
+
+    shader->set_vec3("lightPos", light_pos);
+
+    if (point_light_enabled_)
+        shader->set_vec3("lightColor", point_light_color_ * point_light_intensity_);
+    else
+        shader->set_vec3("lightColor", glm::vec3(0.0f));
+
+    shader->set_vec3("dirLightDir", glm::vec3(-0.35f, -1.0f, 0.15f));
+    if (directional_light_enabled_)
+        shader->set_vec3("dirLightColor", glm::vec3(0.18f, 0.18f, 0.22f));
+    else
+        shader->set_vec3("dirLightColor", glm::vec3(0.0f));
+
+    shader->set_float("materialShininess", 32.0f);
+    shader->set_float("materialSpecularStrength", 0.6f);
+
+    // dodao sam svoju projection matrix jer mi zoom ne radi sa graphics->projection_matrix()
+    glm::mat4 projection = glm::perspective(
+        glm::radians(camera->Zoom),
+        1280.0f / 720.0f,
+        0.1f,
+        100.0f
+    );
+
+    shader->set_mat4("projection", projection);
+    shader->set_mat4("view", graphics->camera()->view_matrix());
+
+    glm::mat4 model = glm::mat4(1.0f);
+    model           = glm::translate(model, glm::vec3(1.2f, 0.0f, 0.2f));
+    model           = glm::scale(model, glm::vec3(0.5f));
+    shader->set_mat4("model", model);
+
+    barrel->draw(shader);
+}
+
+void MainController::draw_barrel2() {
+    auto graphics = engine::core::Controller::get<engine::graphics::GraphicsController>();
+    auto shader   = engine::core::Controller::get<engine::resources::ResourcesController>()->shader("lighting1");
+    auto barrel   = engine::core::Controller::get<engine::resources::ResourcesController>()->model("barrel2");
+    shader->use();
+
+    auto camera = graphics->camera();
+    shader->set_vec3("viewPos", camera->Position);
+
+    float current_time  = static_cast<float>(glfwGetTime());
+    glm::vec3 light_pos = get_point_light_position(current_time);
+
+    shader->set_vec3("lightPos", light_pos);
+
+    if (point_light_enabled_)
+        shader->set_vec3("lightColor", point_light_color_ * point_light_intensity_);
+    else
+        shader->set_vec3("lightColor", glm::vec3(0.0f));
+
+    shader->set_vec3("dirLightDir", glm::vec3(-0.35f, -1.0f, 0.15f));
+    if (directional_light_enabled_)
+        shader->set_vec3("dirLightColor", glm::vec3(0.18f, 0.18f, 0.22f));
+    else
+        shader->set_vec3("dirLightColor", glm::vec3(0.0f));
+
+    shader->set_float("materialShininess", 32.0f);
+    shader->set_float("materialSpecularStrength", 0.6f);
+
+    // dodao sam svoju projection matrix jer mi zoom ne radi sa graphics->projection_matrix()
+    glm::mat4 projection = glm::perspective(
+        glm::radians(camera->Zoom),
+        1280.0f / 720.0f,
+        0.1f,
+        100.0f
+    );
+
+    shader->set_mat4("projection", projection);
+    shader->set_mat4("view", graphics->camera()->view_matrix());
+
+    glm::mat4 model = glm::mat4(1.0f);
+    model           = glm::translate(model, glm::vec3(0.6f, 0.0f, -0.5));
+    model           = glm::scale(model, glm::vec3(0.5f));
+    shader->set_mat4("model", model);
+
+    barrel->draw(shader);
 }
 
 void MainController::update_camera() {
@@ -374,7 +469,7 @@ float MainController::get_lamp_sway_angle(float current_time) const {
 glm::mat4 MainController::get_lamp_model_matrix(float current_time) const {
     glm::mat4 model(1.0f);
 
-    model = glm::translate(model, glm::vec3(1.5f, 0.0f, 1.0f));
+    model = glm::translate(model, glm::vec3(0.9f, 0.0f, -0.2f));
 
     float sway_angle = get_lamp_sway_angle(current_time);
     model            = glm::rotate(model, glm::radians(sway_angle), glm::vec3(0.0f, 0.0f, 1.0f));
