@@ -33,6 +33,8 @@ private:
 
     void draw_barrel2();
 
+    void draw_skybox();
+
     void update_camera();
 
     void trigger_lamp_event(float current_time);

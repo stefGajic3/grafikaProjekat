@@ -140,6 +140,12 @@ void MainController::begin_draw() {
     engine::graphics::OpenGL::clear_buffers();
 }
 
+void MainController::draw_skybox() {
+    auto shader      = engine::core::Controller::get<engine::resources::ResourcesController>()->shader("skybox");
+    auto skybox_cube = engine::core::Controller::get<engine::resources::ResourcesController>()->skybox("skybox");
+    engine::core::Controller::get<engine::graphics::GraphicsController>()->draw_skybox(shader, skybox_cube);
+}
+
 void MainController::draw() {
     draw_floor();
     draw_chair();
@@ -147,6 +153,7 @@ void MainController::draw() {
     draw_light_bulb();
     draw_barrel1();
     draw_barrel2();
+    draw_skybox();
 }
 
 void MainController::end_draw() {
