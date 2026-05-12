@@ -33,6 +33,8 @@ private:
 
     void draw_barrel2();
 
+    void draw_house();
+
     void draw_skybox();
 
     void update_camera();

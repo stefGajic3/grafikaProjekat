@@ -5,10 +5,6 @@
         "path": "floor/floor.obj",
         "flip_uvs": false
       },
-      "chair": {
-        "path": "chair/chair.obj",
-        "flip_uvs": false
-      },
       "lamp": {
         "path": "lamp/lamp.obj",
         "flip_uvs": false
@@ -23,6 +19,14 @@
       },
       "barrel2": {
         "path": "barrel2/WoodenBarrel2.obj",
+        "flip_uvs": false
+      },
+      "chair": {
+        "path": "chair/Wooden_Chair.obj",
+        "flip_uvs": false
+      },
+      "house": {
+        "path": "house/cottage_obj.obj",
         "flip_uvs": false
       }
     }

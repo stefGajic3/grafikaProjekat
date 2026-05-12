@@ -136,14 +136,14 @@ void MainController::draw_floor() {
     floor->draw(shader);
 }
 
-void MainController::begin_draw() {
-    engine::graphics::OpenGL::clear_buffers();
-}
-
 void MainController::draw_skybox() {
     auto shader      = engine::core::Controller::get<engine::resources::ResourcesController>()->shader("skybox");
     auto skybox_cube = engine::core::Controller::get<engine::resources::ResourcesController>()->skybox("skybox");
     engine::core::Controller::get<engine::graphics::GraphicsController>()->draw_skybox(shader, skybox_cube);
+}
+
+void MainController::begin_draw() {
+    engine::graphics::OpenGL::clear_buffers();
 }
 
 void MainController::draw() {
@@ -151,6 +151,7 @@ void MainController::draw() {
     draw_chair();
     draw_lamp();
     draw_light_bulb();
+    draw_house();
     draw_barrel1();
     draw_barrel2();
     draw_skybox();
@@ -162,7 +163,7 @@ void MainController::end_draw() {
 
 void MainController::draw_chair() {
     auto graphics = engine::core::Controller::get<engine::graphics::GraphicsController>();
-    auto shader   = engine::core::Controller::get<engine::resources::ResourcesController>()->shader("lighting1");
+    auto shader   = engine::core::Controller::get<engine::resources::ResourcesController>()->shader("lighting");
     auto chair    = engine::core::Controller::get<engine::resources::ResourcesController>()->model("chair");
     shader->use();
 
@@ -203,6 +204,7 @@ void MainController::draw_chair() {
     glm::mat4 model = glm::mat4(1.0f);
     model           = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.35f));
     model           = glm::rotate(model, glm::radians(25.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    model           = glm::scale(model, glm::vec3(0.01f));
     shader->set_mat4("model", model);
 
     chair->draw(shader);
@@ -251,6 +253,62 @@ void MainController::draw_lamp() {
     shader->set_mat4("model", model);
 
     lamp->draw(shader);
+}
+
+void MainController::draw_house() {
+    auto graphics = engine::core::Controller::get<engine::graphics::GraphicsController>();
+    auto shader   = engine::core::Controller::get<engine::resources::ResourcesController>()->shader("lighting");
+    auto house    = engine::core::Controller::get<engine::resources::ResourcesController>()->model("house");
+    shader->use();
+
+    auto camera = graphics->camera();
+    shader->set_vec3("viewPos", camera->Position);
+
+    float current_time  = static_cast<float>(glfwGetTime());
+    glm::vec3 light_pos = get_point_light_position(current_time);
+
+    shader->set_vec3("lightPos", light_pos);
+
+    if (point_light_enabled_)
+        shader->set_vec3("lightColor", point_light_color_ * point_light_intensity_);
+    else
+        shader->set_vec3("lightColor", glm::vec3(0.0f));
+
+    shader->set_vec3("dirLightDir", glm::vec3(-0.35f, -1.0f, 0.15f));
+    if (directional_light_enabled_)
+        shader->set_vec3("dirLightColor", glm::vec3(0.18f, 0.18f, 0.22f));
+    else
+        shader->set_vec3("dirLightColor", glm::vec3(0.0f));
+
+    shader->set_float("materialShininess", 8.0f);
+    shader->set_float("materialSpecularStrength", 0.05f);
+
+    // dodao sam svoju projection matrix jer mi zoom ne radi sa graphics->projection_matrix()
+    glm::mat4 projection = glm::perspective(
+        glm::radians(camera->Zoom),
+        1280.0f / 720.0f,
+        0.1f,
+        100.0f
+    );
+
+    shader->set_mat4("projection", projection);
+    shader->set_mat4("view", graphics->camera()->view_matrix());
+
+    glm::mat4 model = glm::mat4(1.0f);
+
+    model = glm::translate(model, glm::vec3(0.5f, 0.0f, -3.7f));
+
+    model = glm::rotate(
+        model,
+        glm::radians(-26.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f)
+    );
+
+    model = glm::scale(model, glm::vec3(0.15f));
+
+    shader->set_mat4("model", model);
+
+    house->draw(shader);
 }
 
 void MainController::draw_light_bulb() {
@@ -493,3 +551,4 @@ glm::vec3 MainController::get_point_light_position(float current_time) const {
     glm::vec4 world_pos = bulb_model * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
     return glm::vec3(world_pos);
 }
+
