@@ -26,7 +26,8 @@ void main()
 //#shader fragment
 #version 330 core
 
-out vec4 FragColor;
+layout (location = 0) out vec4 FragColor;
+layout (location = 1) out vec4 BrightColor;
 
 in vec2 TexCoords;
 in vec3 FragPos;
@@ -53,7 +54,7 @@ void main()
     vec3 color = texture(texture_diffuse1, TexCoords).rgb;
     vec3 norm = normalize(Normal);
     vec3 viewDir = normalize(viewPos - FragPos);
-    
+
     // Directional light
     vec3 dirLightDirNorm = normalize(-dirLightDir);
 
@@ -88,4 +89,5 @@ void main()
     attenuation * (ambientPoint + diffusePoint + specularPoint);
 
     FragColor = vec4(result, 1.0);
+    BrightColor = vec4(0.0, 0.0, 0.0, 1.0);
 }

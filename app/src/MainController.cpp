@@ -16,6 +16,8 @@ void MainController::initialize() {
     camera->Yaw      = -90.0f;
     camera->Pitch    = -10.0f;
     camera->rotate_camera(0.0f, 0.0f);
+
+    graphics->initialize_bloom(1280, 720);
 }
 
 bool MainController::loop() {
@@ -115,7 +117,7 @@ void MainController::draw_floor() {
 
     shader->set_vec3("dirLightDir", glm::vec3(-0.35f, -1.0f, 0.15f));
     if (directional_light_enabled_)
-        shader->set_vec3("dirLightColor", glm::vec3(0.18f, 0.18f, 0.22f));
+        shader->set_vec3("dirLightColor", glm::vec3(0.12f, 0.12f, 0.15f));
     else
         shader->set_vec3("dirLightColor", glm::vec3(0.0f));
 
@@ -143,6 +145,9 @@ void MainController::draw_skybox() {
 }
 
 void MainController::begin_draw() {
+    auto graphics = engine::core::Controller::get<engine::graphics::GraphicsController>();
+
+    graphics->begin_bloom_render();
     engine::graphics::OpenGL::clear_buffers();
 }
 
@@ -158,7 +163,13 @@ void MainController::draw() {
 }
 
 void MainController::end_draw() {
-    engine::core::Controller::get<engine::platform::PlatformController>()->swap_buffers();
+    auto graphics = engine::core::Controller::get<engine::graphics::GraphicsController>();
+
+    graphics->end_bloom_render();
+    graphics->draw_bloom_result();
+    engine::core::Controller::get<engine::platform::PlatformController>()
+            ->
+            swap_buffers();
 }
 
 void MainController::draw_chair() {
@@ -183,7 +194,7 @@ void MainController::draw_chair() {
 
     shader->set_vec3("dirLightDir", glm::vec3(-0.35f, -1.0f, 0.15f));
     if (directional_light_enabled_)
-        shader->set_vec3("dirLightColor", glm::vec3(0.18f, 0.18f, 0.22f));
+        shader->set_vec3("dirLightColor", glm::vec3(0.12f, 0.12f, 0.15f));
     else
         shader->set_vec3("dirLightColor", glm::vec3(0.0f));
 
@@ -231,7 +242,7 @@ void MainController::draw_lamp() {
 
     shader->set_vec3("dirLightDir", glm::vec3(-0.35f, -1.0f, 0.15f));
     if (directional_light_enabled_)
-        shader->set_vec3("dirLightColor", glm::vec3(0.18f, 0.18f, 0.22f));
+        shader->set_vec3("dirLightColor", glm::vec3(0.12f, 0.12f, 0.15f));
     else
         shader->set_vec3("dirLightColor", glm::vec3(0.0f));
 
@@ -276,7 +287,7 @@ void MainController::draw_house() {
 
     shader->set_vec3("dirLightDir", glm::vec3(-0.35f, -1.0f, 0.15f));
     if (directional_light_enabled_)
-        shader->set_vec3("dirLightColor", glm::vec3(0.18f, 0.18f, 0.22f));
+        shader->set_vec3("dirLightColor", glm::vec3(0.12f, 0.12f, 0.15f));
     else
         shader->set_vec3("dirLightColor", glm::vec3(0.0f));
 
@@ -367,7 +378,7 @@ void MainController::draw_barrel1() {
 
     shader->set_vec3("dirLightDir", glm::vec3(-0.35f, -1.0f, 0.15f));
     if (directional_light_enabled_)
-        shader->set_vec3("dirLightColor", glm::vec3(0.18f, 0.18f, 0.22f));
+        shader->set_vec3("dirLightColor", glm::vec3(0.12f, 0.12f, 0.15f));
     else
         shader->set_vec3("dirLightColor", glm::vec3(0.0f));
 
@@ -414,7 +425,7 @@ void MainController::draw_barrel2() {
 
     shader->set_vec3("dirLightDir", glm::vec3(-0.35f, -1.0f, 0.15f));
     if (directional_light_enabled_)
-        shader->set_vec3("dirLightColor", glm::vec3(0.18f, 0.18f, 0.22f));
+        shader->set_vec3("dirLightColor", glm::vec3(0.12f, 0.12f, 0.15f));
     else
         shader->set_vec3("dirLightColor", glm::vec3(0.0f));
 

@@ -15,11 +15,15 @@ void main()
 //#shader fragment
 #version 330 core
 
-out vec4 FragColor;
+layout (location = 0) out vec4 FragColor;
+layout (location = 1) out vec4 BrightColor;
 
 uniform vec3 bulbColor;
 
 void main()
 {
-    FragColor = vec4(bulbColor, 1.0);
+    vec3 color = bulbColor * 6.0;
+
+    FragColor = vec4(color, 1.0);
+    BrightColor = vec4(color, 1.0);
 }
