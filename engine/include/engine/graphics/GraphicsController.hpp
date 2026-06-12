@@ -56,6 +56,7 @@ namespace engine::graphics {
     */
     class GraphicsController final : public core::Controller {
     public:
+        // bloom
         void initialize_bloom(int width, int height);
 
         void begin_bloom_render();
@@ -63,6 +64,23 @@ namespace engine::graphics {
         void end_bloom_render();
 
         void draw_bloom_result();
+
+        // end bloom
+
+        // point shadows
+        void initialize_point_shadows(unsigned int shadow_width, unsigned int shadow_height);
+
+        void begin_point_shadow_render(const glm::vec3 &light_pos);
+
+        void end_point_shadow_render();
+
+        unsigned int point_shadow_depth_cubemap() const;
+
+        float point_shadow_far_plane() const;
+
+        void bind_point_shadow_depth_map(unsigned int texture_unit) const;
+
+        // end point shadows
 
         std::string_view name() const override;
 
@@ -166,6 +184,8 @@ namespace engine::graphics {
         * @brief Initializes OpenGL, ImGUI, and projection matrix params;
         */
 
+        // bloom
+
         unsigned int bloom_hdr_fbo_          = 0;
         unsigned int bloom_color_buffers_[2] = {0, 0};
         unsigned int bloom_depth_rbo_        = 0;
@@ -184,6 +204,24 @@ namespace engine::graphics {
         int bloom_blur_amount_ = 10;
 
         void render_screen_quad();
+
+        // end bloom
+
+        // point shadows
+        unsigned int point_shadow_fbo_           = 0;
+        unsigned int point_shadow_depth_cubemap_ = 0;
+
+        unsigned int point_shadow_width_  = 1024;
+        unsigned int point_shadow_height_ = 1024;
+
+        float point_shadow_near_plane_ = 0.1f;
+        float point_shadow_far_plane_  = 25.0f;
+
+        glm::mat4 point_shadow_matrices_[6];
+
+        glm::vec3 point_shadow_light_pos_;
+
+        // end point shadows
 
         void initialize() override;
 

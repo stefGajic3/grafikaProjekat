@@ -45,6 +45,10 @@ private:
 
     float get_lamp_sway_angle(float current_time) const;
 
+    void draw_point_shadow_depth();
+
+    void draw_model_depth(const std::string &model_name, const glm::mat4 &model_matrix);
+
     glm::mat4 get_lamp_model_matrix(float current_time) const;
 
     glm::vec3 get_point_light_position(float current_time) const;

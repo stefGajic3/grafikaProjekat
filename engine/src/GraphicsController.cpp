@@ -10,6 +10,7 @@
 #include <engine/resources/ResourcesController.hpp>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
+#include <iostream>
 
 namespace engine::graphics {
     void GraphicsController::initialize() {
@@ -86,6 +87,8 @@ namespace engine::graphics {
         CHECKED_GL_CALL(glDepthFunc, GL_LESS); // set depth function back to default
         CHECKED_GL_CALL(glBindTexture, GL_TEXTURE_CUBE_MAP, 0);
     }
+
+    // bloom
 
     void GraphicsController::initialize_bloom(int width, int height) {
         bloom_width_  = width;
@@ -314,4 +317,148 @@ namespace engine::graphics {
 
         render_screen_quad();
     }
+
+    // end bloom
+
+    // point shadows
+    unsigned int GraphicsController::point_shadow_depth_cubemap() const {
+        return point_shadow_depth_cubemap_;
+    }
+
+    float GraphicsController::point_shadow_far_plane() const {
+        return point_shadow_far_plane_;
+    }
+
+    void GraphicsController::initialize_point_shadows(unsigned int shadow_width, unsigned int shadow_height) {
+        point_shadow_width_  = shadow_width;
+        point_shadow_height_ = shadow_height;
+
+        glGenFramebuffers(1, &point_shadow_fbo_);
+
+        glGenTextures(1, &point_shadow_depth_cubemap_);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, point_shadow_depth_cubemap_);
+
+        for (unsigned int i = 0; i < 6; ++i) {
+            glTexImage2D(
+                GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                0,
+                GL_DEPTH_COMPONENT,
+                point_shadow_width_,
+                point_shadow_height_,
+                0,
+                GL_DEPTH_COMPONENT,
+                GL_FLOAT,
+                nullptr
+            );
+        }
+
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, point_shadow_fbo_);
+        glFramebufferTexture(
+            GL_FRAMEBUFFER,
+            GL_DEPTH_ATTACHMENT,
+            point_shadow_depth_cubemap_,
+            0
+        );
+
+        glDrawBuffer(GL_NONE);
+        glReadBuffer(GL_NONE);
+
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+            throw std::runtime_error("Point shadow framebuffer is not complete");
+        }
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+
+    void GraphicsController::begin_point_shadow_render(const glm::vec3 &light_pos) {
+        point_shadow_light_pos_ = light_pos;
+
+        glm::mat4 shadow_projection = glm::perspective(
+            glm::radians(90.0f),
+            static_cast<float>(point_shadow_width_) / static_cast<float>(point_shadow_height_),
+            point_shadow_near_plane_,
+            point_shadow_far_plane_
+        );
+
+        point_shadow_matrices_[0] = shadow_projection * glm::lookAt(
+                                        light_pos,
+                                        light_pos + glm::vec3(1.0f, 0.0f, 0.0f),
+                                        glm::vec3(0.0f, -1.0f, 0.0f)
+                                    );
+
+        point_shadow_matrices_[1] = shadow_projection * glm::lookAt(
+                                        light_pos,
+                                        light_pos + glm::vec3(-1.0f, 0.0f, 0.0f),
+                                        glm::vec3(0.0f, -1.0f, 0.0f)
+                                    );
+
+        point_shadow_matrices_[2] = shadow_projection * glm::lookAt(
+                                        light_pos,
+                                        light_pos + glm::vec3(0.0f, 1.0f, 0.0f),
+                                        glm::vec3(0.0f, 0.0f, 1.0f)
+                                    );
+
+        point_shadow_matrices_[3] = shadow_projection * glm::lookAt(
+                                        light_pos,
+                                        light_pos + glm::vec3(0.0f, -1.0f, 0.0f),
+                                        glm::vec3(0.0f, 0.0f, -1.0f)
+                                    );
+
+        point_shadow_matrices_[4] = shadow_projection * glm::lookAt(
+                                        light_pos,
+                                        light_pos + glm::vec3(0.0f, 0.0f, 1.0f),
+                                        glm::vec3(0.0f, -1.0f, 0.0f)
+                                    );
+
+        point_shadow_matrices_[5] = shadow_projection * glm::lookAt(
+                                        light_pos,
+                                        light_pos + glm::vec3(0.0f, 0.0f, -1.0f),
+                                        glm::vec3(0.0f, -1.0f, 0.0f)
+                                    );
+
+        auto shadow_shader = engine::core::Controller::get<engine::resources::ResourcesController>()
+                ->shader("point_shadow_depth");
+
+        shadow_shader->use();
+
+        for (unsigned int i = 0; i < 6; ++i) {
+            shadow_shader->set_mat4(
+                "shadowMatrices[" + std::to_string(i) + "]",
+                point_shadow_matrices_[i]
+            );
+        }
+
+        shadow_shader->set_vec3("lightPos", light_pos);
+        shadow_shader->set_float("far_plane", point_shadow_far_plane_);
+
+        glViewport(0, 0, point_shadow_width_, point_shadow_height_);
+        glBindFramebuffer(GL_FRAMEBUFFER, point_shadow_fbo_);
+        glClear(GL_DEPTH_BUFFER_BIT);
+    }
+
+    void GraphicsController::end_point_shadow_render() {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        auto platform = engine::core::Controller::get<engine::platform::PlatformController>();
+
+        glViewport(
+            0,
+            0,
+            platform->window()->width(),
+            platform->window()->height()
+        );
+    }
+
+    void GraphicsController::bind_point_shadow_depth_map(unsigned int texture_unit) const {
+        glActiveTexture(GL_TEXTURE0 + texture_unit);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, point_shadow_depth_cubemap_);
+    }
+
+    // end point shadows
 } // namespace engine::graphics

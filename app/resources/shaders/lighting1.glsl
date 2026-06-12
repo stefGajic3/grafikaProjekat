@@ -44,18 +44,61 @@ uniform vec3 dirLightColor;
 uniform vec3 lightPos;
 uniform vec3 lightColor;
 
+// point shadows
+uniform samplerCube depthMap;
+uniform float far_plane;
+uniform bool shadows;
+
 uniform vec3 viewPos;
 
 // material
 uniform float materialShininess;
 uniform float materialSpecularStrength;
 
+float ShadowCalculation(vec3 fragPos)
+{
+    vec3 fragToLight = fragPos - lightPos;
+
+    float currentDepth = length(fragToLight);
+
+    float shadow = 0.0;
+    float bias = 0.15;
+    int samples = 20;
+    float viewDistance = length(viewPos - fragPos);
+    float diskRadius = (1.0 + (viewDistance / far_plane)) / 25.0;
+
+    vec3 sampleOffsetDirections[20] = vec3[]
+    (
+    vec3(1, 1, 1), vec3(1, -1, 1), vec3(-1, -1, 1), vec3(-1, 1, 1),
+    vec3(1, 1, -1), vec3(1, -1, -1), vec3(-1, -1, -1), vec3(-1, 1, -1),
+    vec3(1, 1, 0), vec3(1, -1, 0), vec3(-1, -1, 0), vec3(-1, 1, 0),
+    vec3(1, 0, 1), vec3(-1, 0, 1), vec3(1, 0, -1), vec3(-1, 0, -1),
+    vec3(0, 1, 1), vec3(0, -1, 1), vec3(0, -1, -1), vec3(0, 1, -1)
+    );
+
+    for (int i = 0; i < samples; ++i)
+    {
+        float closestDepth = texture(
+            depthMap,
+            fragToLight + sampleOffsetDirections[i] * diskRadius
+        ).r;
+
+        closestDepth *= far_plane;
+
+        if (currentDepth - bias > closestDepth)
+        shadow += 1.0;
+    }
+
+    shadow /= float(samples);
+
+    return shadow;
+}
+
 void main()
 {
     vec3 color = texture(texture_diffuse1, TexCoords).rgb;
     vec3 norm = normalize(Normal);
     vec3 viewDir = normalize(viewPos - FragPos);
-
 
     float roughness = texture(texture_roughness1, TexCoords).r;
 
@@ -89,9 +132,14 @@ void main()
     float distance = length(lightPos - FragPos);
     float attenuation = 1.0 / (1.0 + 0.14 * distance + 0.07 * distance * distance);
 
+    float shadow = shadows ? ShadowCalculation(FragPos) : 0.0;
+
+    vec3 pointLighting =
+    ambientPoint + (1.0 - shadow) * (diffusePoint + specularPoint);
+
     vec3 result =
     ambientDir + diffuseDir + specularDir +
-    attenuation * (ambientPoint + diffusePoint + specularPoint);
+    attenuation * pointLighting;
 
     FragColor = vec4(result, 1.0);
     BrightColor = vec4(0.0, 0.0, 0.0, 1.0);

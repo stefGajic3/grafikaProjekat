@@ -2,6 +2,7 @@
 #include <engine/graphics/GraphicsController.hpp>
 #include <GLFW/glfw3.h>
 #include <cmath>
+#include <string>
 
 void MainController::initialize() {
     engine::graphics::OpenGL::enable_depth_testing();
@@ -18,6 +19,7 @@ void MainController::initialize() {
     camera->rotate_camera(0.0f, 0.0f);
 
     graphics->initialize_bloom(1280, 720);
+    graphics->initialize_point_shadows(1024, 1024);
 }
 
 bool MainController::loop() {
@@ -101,9 +103,17 @@ void MainController::draw_floor() {
     auto graphics = engine::core::Controller::get<engine::graphics::GraphicsController>();
     auto shader   = engine::core::Controller::get<engine::resources::ResourcesController>()->shader("lighting");
     auto floor    = engine::core::Controller::get<engine::resources::ResourcesController>()->model("floor");
+    auto camera   = engine::core::Controller::get<engine::graphics::GraphicsController>()->camera();
     shader->use();
+    shader->set_bool("shadows", point_light_enabled_);
 
-    auto camera = engine::core::Controller::get<engine::graphics::GraphicsController>()->camera();
+    shader->set_float(
+        "far_plane",
+        graphics->point_shadow_far_plane()
+    );
+
+    graphics->bind_point_shadow_depth_map(3);
+    shader->set_int("depthMap", 3);
     shader->set_vec3("viewPos", camera->Position);
 
     float current_time  = static_cast<float>(glfwGetTime());
@@ -145,13 +155,16 @@ void MainController::draw_skybox() {
 }
 
 void MainController::begin_draw() {
-    auto graphics = engine::core::Controller::get<engine::graphics::GraphicsController>();
-
-    graphics->begin_bloom_render();
     engine::graphics::OpenGL::clear_buffers();
 }
 
 void MainController::draw() {
+    draw_point_shadow_depth();
+
+    auto graphics = engine::core::Controller::get<engine::graphics::GraphicsController>();
+    graphics->begin_bloom_render();
+    engine::graphics::OpenGL::clear_buffers();
+
     draw_floor();
     draw_chair();
     draw_lamp();
@@ -167,18 +180,26 @@ void MainController::end_draw() {
 
     graphics->end_bloom_render();
     graphics->draw_bloom_result();
-    engine::core::Controller::get<engine::platform::PlatformController>()
-            ->
-            swap_buffers();
+    engine::core::Controller::get<engine::platform::PlatformController>()->swap_buffers();
 }
 
 void MainController::draw_chair() {
     auto graphics = engine::core::Controller::get<engine::graphics::GraphicsController>();
     auto shader   = engine::core::Controller::get<engine::resources::ResourcesController>()->shader("lighting");
     auto chair    = engine::core::Controller::get<engine::resources::ResourcesController>()->model("chair");
+    auto camera   = graphics->camera();
+
     shader->use();
 
-    auto camera = graphics->camera();
+    shader->set_bool("shadows", point_light_enabled_);
+
+    shader->set_float(
+        "far_plane",
+        graphics->point_shadow_far_plane()
+    );
+
+    graphics->bind_point_shadow_depth_map(3);
+    shader->set_int("depthMap", 3);
 
     shader->set_vec3("viewPos", camera->Position);
 
@@ -225,9 +246,20 @@ void MainController::draw_lamp() {
     auto graphics = engine::core::Controller::get<engine::graphics::GraphicsController>();
     auto shader   = engine::core::Controller::get<engine::resources::ResourcesController>()->shader("lighting");
     auto lamp     = engine::core::Controller::get<engine::resources::ResourcesController>()->model("lamp");
+    auto camera   = graphics->camera();
+
     shader->use();
 
-    auto camera = graphics->camera();
+    shader->set_bool("shadows", point_light_enabled_);
+
+    shader->set_float(
+        "far_plane",
+        graphics->point_shadow_far_plane()
+    );
+
+    graphics->bind_point_shadow_depth_map(3);
+    shader->set_int("depthMap", 3);
+
     shader->set_vec3("viewPos", camera->Position);
 
     float current_time  = static_cast<float>(glfwGetTime());
@@ -270,9 +302,20 @@ void MainController::draw_house() {
     auto graphics = engine::core::Controller::get<engine::graphics::GraphicsController>();
     auto shader   = engine::core::Controller::get<engine::resources::ResourcesController>()->shader("lighting");
     auto house    = engine::core::Controller::get<engine::resources::ResourcesController>()->model("house");
+    auto camera   = graphics->camera();
+
     shader->use();
 
-    auto camera = graphics->camera();
+    shader->set_bool("shadows", point_light_enabled_);
+
+    shader->set_float(
+        "far_plane",
+        graphics->point_shadow_far_plane()
+    );
+
+    graphics->bind_point_shadow_depth_map(3);
+    shader->set_int("depthMap", 3);
+
     shader->set_vec3("viewPos", camera->Position);
 
     float current_time  = static_cast<float>(glfwGetTime());
@@ -361,9 +404,20 @@ void MainController::draw_barrel1() {
     auto graphics = engine::core::Controller::get<engine::graphics::GraphicsController>();
     auto shader   = engine::core::Controller::get<engine::resources::ResourcesController>()->shader("lighting1");
     auto barrel   = engine::core::Controller::get<engine::resources::ResourcesController>()->model("barrel1");
+    auto camera   = graphics->camera();
+
     shader->use();
 
-    auto camera = graphics->camera();
+    shader->set_bool("shadows", point_light_enabled_);
+
+    shader->set_float(
+        "far_plane",
+        graphics->point_shadow_far_plane()
+    );
+
+    graphics->bind_point_shadow_depth_map(3);
+    shader->set_int("depthMap", 3);
+
     shader->set_vec3("viewPos", camera->Position);
 
     float current_time  = static_cast<float>(glfwGetTime());
@@ -408,9 +462,20 @@ void MainController::draw_barrel2() {
     auto graphics = engine::core::Controller::get<engine::graphics::GraphicsController>();
     auto shader   = engine::core::Controller::get<engine::resources::ResourcesController>()->shader("lighting1");
     auto barrel   = engine::core::Controller::get<engine::resources::ResourcesController>()->model("barrel2");
+    auto camera   = graphics->camera();
+
     shader->use();
 
-    auto camera = graphics->camera();
+    shader->set_bool("shadows", point_light_enabled_);
+
+    shader->set_float(
+        "far_plane",
+        graphics->point_shadow_far_plane()
+    );
+
+    graphics->bind_point_shadow_depth_map(3);
+    shader->set_int("depthMap", 3);
+
     shader->set_vec3("viewPos", camera->Position);
 
     float current_time  = static_cast<float>(glfwGetTime());
@@ -563,3 +628,64 @@ glm::vec3 MainController::get_point_light_position(float current_time) const {
     return glm::vec3(world_pos);
 }
 
+void MainController::draw_point_shadow_depth() {
+    if (!point_light_enabled_)
+        return;
+
+    auto graphics = engine::core::Controller::get<engine::graphics::GraphicsController>();
+
+    float current_time  = static_cast<float>(glfwGetTime());
+    glm::vec3 light_pos = get_point_light_position(current_time);
+
+    graphics->begin_point_shadow_render(light_pos);
+
+    // floor
+    draw_model_depth(
+        "floor",
+        glm::scale(glm::mat4(1.0f), glm::vec3(1.0f))
+    );
+
+    // chair
+    glm::mat4 chair_model = glm::mat4(1.0f);
+    chair_model           = glm::translate(chair_model, glm::vec3(0.0f, 0.0f, 0.35f));
+    chair_model           = glm::rotate(chair_model, glm::radians(25.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    chair_model           = glm::scale(chair_model, glm::vec3(0.01f));
+    draw_model_depth("chair", chair_model);
+
+    // lamp
+    //glm::mat4 lamp_model = get_lamp_model_matrix(current_time);
+    //draw_model_depth("lamp", lamp_model);
+
+    // house
+    glm::mat4 house_model = glm::mat4(1.0f);
+    house_model           = glm::translate(house_model, glm::vec3(0.5f, 0.0f, -3.7f));
+    house_model           = glm::rotate(house_model, glm::radians(-26.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    house_model           = glm::scale(house_model, glm::vec3(0.15f));
+    draw_model_depth("house", house_model);
+
+    // barrel1
+    glm::mat4 barrel1_model = glm::mat4(1.0f);
+    barrel1_model           = glm::translate(barrel1_model, glm::vec3(1.2f, 0.0f, 0.2f));
+    barrel1_model           = glm::scale(barrel1_model, glm::vec3(0.5f));
+    draw_model_depth("barrel1", barrel1_model);
+
+    // barrel2
+    glm::mat4 barrel2_model = glm::mat4(1.0f);
+    barrel2_model           = glm::translate(barrel2_model, glm::vec3(0.6f, 0.0f, -0.5f));
+    barrel2_model           = glm::scale(barrel2_model, glm::vec3(0.5f));
+    draw_model_depth("barrel2", barrel2_model);
+
+    graphics->end_point_shadow_render();
+}
+
+void MainController::draw_model_depth(const std::string &model_name, const glm::mat4 &model_matrix) {
+    auto resources = engine::core::Controller::get<engine::resources::ResourcesController>();
+
+    auto shader = resources->shader("point_shadow_depth");
+    auto model  = resources->model(model_name);
+
+    shader->use();
+    shader->set_mat4("model", model_matrix);
+
+    model->draw(shader);
+}
