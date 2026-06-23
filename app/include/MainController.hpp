@@ -21,19 +21,7 @@ private:
 
     void end_draw() override;
 
-    void draw_floor();
-
-    void draw_chair();
-
-    void draw_lamp();
-
-    void draw_light_bulb();
-
-    void draw_barrel1();
-
-    void draw_barrel2();
-
-    void draw_house();
+    void draw_light_bulb(float current_time);
 
     void draw_skybox();
 
@@ -45,13 +33,16 @@ private:
 
     float get_lamp_sway_angle(float current_time) const;
 
-    void draw_point_shadow_depth();
+    void draw_point_shadow_depth(float current_time);
 
-    void draw_model_depth(const std::string &model_name, const glm::mat4 &model_matrix);
+    void draw_model_depth(const std::string &model_name, const glm::mat4 &model_matrix,
+                          const engine::resources::Shader *shaders);
 
     glm::mat4 get_lamp_model_matrix(float current_time) const;
 
     glm::vec3 get_point_light_position(float current_time) const;
+
+    void draw_scene_models(float current_time);
 
     bool m_first_mouse{true};
 
@@ -71,7 +62,7 @@ private:
     LampEventState lamp_event_state_ = LampEventState::Idle;
 
     float lamp_event_start_time_ = 0.0f;
-    float flicker_start_time_    = 0.0f;
+    float flicker_start_time_ = 0.0f;
 
     glm::vec3 point_light_color_ = glm::vec3(1.0f, 0.75f, 0.4f);
     float point_light_intensity_ = 1.0f;

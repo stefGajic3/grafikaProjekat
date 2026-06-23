@@ -47,9 +47,9 @@ uniform float far_plane;
 
 void main()
 {
-    float lightDistance = length(FragPos.xyz - lightPos);
+    float lightDistance = length(FragPos.xyz - lightPos); // udaljenost fragmenta od lampe
 
-    lightDistance = lightDistance / far_plane;
+    lightDistance = lightDistance / far_plane; // normalizuje u [0, 1]
 
     gl_FragDepth = lightDistance;
 }

@@ -84,6 +84,7 @@ float ShadowCalculation(vec3 fragPos)
 
         closestDepth *= far_plane;
 
+        
         if (currentDepth - bias > closestDepth)
         shadow += 1.0;
     }
