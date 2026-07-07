@@ -1,0 +1,8 @@
+newmtl FloorMaterial
+Ka 0.120000 0.120000 0.120000
+Kd 0.420000 0.420000 0.420000
+Ks 0.060000 0.060000 0.060000
+Ns 24.000000
+d 1.000000
+illum 2
+map_Kd granite_tile_diff_4k.jpg

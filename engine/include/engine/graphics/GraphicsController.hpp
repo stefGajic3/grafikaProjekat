@@ -20,8 +20,8 @@ class Shader;
 
 namespace engine::graphics {
 /**
-* @brief Parameters used to define a perspective projection matrix.
-*/
+    * @brief Parameters used to define a perspective projection matrix.
+    */
 struct PerspectiveMatrixParams {
     float FOV;
     float Width;
@@ -31,8 +31,8 @@ struct PerspectiveMatrixParams {
 };
 
 /**
-* @brief Parameters used to define an orthographic projection matrix.
-*/
+    * @brief Parameters used to define an orthographic projection matrix.
+    */
 struct OrthographicMatrixParams {
     float Left;
     float Right;
@@ -48,42 +48,69 @@ enum ProjectionType {
 };
 
 /**
-* @class GraphicsController
-* @brief Implements basic drawing methods that the @ref core::App implementation uses.
-*
-* This class should implement all the complex functions needed for drawing an entity in the scene.
-* For example @ref GraphicsController::draw_skybox.
-*/
+    * @class GraphicsController
+    * @brief Implements basic drawing methods that the @ref core::App implementation uses.
+    *
+    * This class should implement all the complex functions needed for drawing an entity in the scene.
+    * For example @ref GraphicsController::draw_skybox.
+    */
 class GraphicsController final : public core::Controller {
 public:
+    // bloom
+    void initialize_bloom(int width, int height);
+
+    void begin_bloom_render();
+
+    void end_bloom_render();
+
+    void draw_bloom_result(const resources::Shader *blur_shader,
+                           const resources::Shader *final_shader);
+
+    // end bloom
+
+    // point shadows
+    void initialize_point_shadows(unsigned int shadow_width, unsigned int shadow_height);
+
+    void begin_point_shadow_render(const glm::vec3 &light_pos, const resources::Shader *shadow_shader);
+
+    void end_point_shadow_render();
+
+    unsigned int point_shadow_depth_cubemap() const;
+
+    float point_shadow_far_plane() const;
+
+    void bind_point_shadow_depth_map(unsigned int texture_unit) const;
+
+    // end point shadows
+
     std::string_view name() const override;
 
     /**
-    * @brief Calls internal methods for the beginning of gui drawing. Should be called in pair with @ref GraphicsController::end_gui.
-    *
-    * Example:
-    * @code
-    * auto graphics = engine::core::Controller::get<engine::graphics::GraphicsController>();
-    * graphics->begin_gui();
-    * ImGui::Begin("Camera info");
-    * const auto &c = ...;
-    * ImGui::Text("Camera position: (%f, %f, %f)", c.Position.x, c.Position.y, c.Position.z);
-    * ImGui::Text("(Yaw, Pitch): (%f, %f)", c.Yaw, c.Pitch);
-    * ImGui::Text("Camera front: (%f, %f, %f)", c.Front.x, c.Front.y, c.Front.z);
-    * ImGui::End();
-    * graphics->end_gui();
-    * @endcode
-    */
+        * @brief Calls internal methods for the beginning of gui drawing. Should be called in pair with @ref GraphicsController::end_gui.
+        *
+        * Example:
+        * @code
+        * auto graphics = engine::core::Controller::get<engine::graphics::GraphicsController>();
+        * graphics->begin_gui();
+        * ImGui::Begin("Camera info");
+        * const auto &c = ...;
+        * ImGui::Text("Camera position: (%f, %f, %f)", c.Position.x, c.Position.y, c.Position.z);
+        * ImGui::Text("(Yaw, Pitch): (%f, %f)", c.Yaw, c.Pitch);
+        * ImGui::Text("Camera front: (%f, %f, %f)", c.Front.x, c.Front.y, c.Front.z);
+        * ImGui::End();
+        * graphics->end_gui();
+        * @endcode
+        */
     void begin_gui();
 
     /**
-    * @brief Calls internal method for the ending of gui drawing. Should be called in pair with @ref GraphicsController::begin_gui.
-    */
+        * @brief Calls internal method for the ending of gui drawing. Should be called in pair with @ref GraphicsController::begin_gui.
+        */
     void end_gui();
 
     /**
-    * @brief Draws a @ref resources::Skybox with the @ref resources::Shader.
-    */
+        * @brief Draws a @ref resources::Skybox with the @ref resources::Shader.
+        */
     void draw_skybox(const resources::Shader *shader, const resources::Skybox *skybox);
 
     Camera *camera() {
@@ -91,9 +118,9 @@ public:
     }
 
     /**
-    * @brief Compute the projection matrix.
-    * @returns Return perspective projection by default.
-    */
+        * @brief Compute the projection matrix.
+        * @returns Return perspective projection by default.
+        */
     template<ProjectionType type = Perspective>
     glm::mat4 projection_matrix() const {
         if constexpr (type == Perspective) {
@@ -107,9 +134,9 @@ public:
     }
 
     /**
-    * @brief Compute the projection matrix.
-    * @returns Return perspective projection by default.
-    */
+        * @brief Compute the projection matrix.
+        * @returns Return perspective projection by default.
+        */
     glm::mat4 projection_matrix(ProjectionType type = Perspective) const {
         switch (type) {
             case Perspective: return projection_matrix<Perspective>();
@@ -119,44 +146,84 @@ public:
     }
 
     /**
-    * @brief Use this function to change the perspective projection matrix parameters.
-    * Projection matrix is always computed when the @ref GraphicsController::projection_matrix is called.
-    * @returns @ref PerspectiveMatrixParams
-    */
+        * @brief Use this function to change the perspective projection matrix parameters.
+        * Projection matrix is always computed when the @ref GraphicsController::projection_matrix is called.
+        * @returns @ref PerspectiveMatrixParams
+        */
     PerspectiveMatrixParams &perspective_params() {
         return m_perspective_params;
     }
 
     /**
-    * @brief Get the current @ref PerspectiveMatrixParams values.
-    * @returns @ref PerspectiveMatrixParams
-    */
+        * @brief Get the current @ref PerspectiveMatrixParams values.
+        * @returns @ref PerspectiveMatrixParams
+        */
     const PerspectiveMatrixParams &perspective_params() const {
         return m_perspective_params;
     }
 
     /**
-    * @brief Use this function to change the orthographic projection matrix parameters.
-    * Projection matrix is always computed
-    * when @ref GraphicsController::projection_matrix is called.
-    * @returns @ref PerspectiveMatrixParams
-    */
+        * @brief Use this function to change the orthographic projection matrix parameters.
+        * Projection matrix is always computed
+        * when @ref GraphicsController::projection_matrix is called.
+        * @returns @ref PerspectiveMatrixParams
+        */
     OrthographicMatrixParams &orthographic_params() {
         return m_ortho_params;
     }
 
     /**
-    * @brief Get the current @ref OrthographicMatrixParams values.
-    * @returns @ref PerspectiveMatrixParams
-    */
+        * @brief Get the current @ref OrthographicMatrixParams values.
+        * @returns @ref PerspectiveMatrixParams
+        */
     const OrthographicMatrixParams &orthographic_params() const {
         return m_ortho_params;
     }
 
 private:
     /**
-    * @brief Initializes OpenGL, ImGUI, and projection matrix params;
-    */
+        * @brief Initializes OpenGL, ImGUI, and projection matrix params;
+        */
+
+    // bloom
+
+    unsigned int bloom_hdr_fbo_ = 0;
+    unsigned int bloom_color_buffers_[2] = {0, 0};
+    unsigned int bloom_depth_rbo_ = 0;
+
+    unsigned int bloom_width_ = 1280;
+    unsigned int bloom_height_ = 720;
+
+    bool bloom_initialized_ = false;
+
+    unsigned int bloom_quad_vao_ = 0;
+    unsigned int bloom_quad_vbo_ = 0;
+
+    unsigned int bloom_pingpong_fbo_[2] = {0, 0};
+    unsigned int bloom_pingpong_colorbuffers_[2] = {0, 0};
+
+    int bloom_blur_amount_ = 10;
+
+    void render_screen_quad();
+
+    // end bloom
+
+    // point shadows
+    unsigned int point_shadow_fbo_ = 0;
+    unsigned int point_shadow_depth_cubemap_ = 0;
+
+    unsigned int point_shadow_width_ = 1024;
+    unsigned int point_shadow_height_ = 1024;
+
+    float point_shadow_near_plane_ = 0.1f;
+    float point_shadow_far_plane_ = 25.0f;
+
+    glm::mat4 point_shadow_matrices_[6];
+
+    glm::vec3 point_shadow_light_pos_;
+
+    // end point shadows
+
     void initialize() override;
 
     void terminate();
@@ -170,9 +237,9 @@ private:
 };
 
 /**
-* @class GraphicsPlatformEventObserver
-* @brief Observers change in window size in order to update the projection matrix.
-*/
+    * @class GraphicsPlatformEventObserver
+    * @brief Observers change in window size in order to update the projection matrix.
+    */
 class GraphicsPlatformEventObserver final : public platform::PlatformEventObserver {
 public:
     explicit GraphicsPlatformEventObserver(GraphicsController *graphics)
